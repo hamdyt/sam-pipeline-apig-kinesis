@@ -1,83 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
 <style>
     th{ 
         color:#fff;
             }
+</style> -->
+
+<style>
+    
 </style>
+
+<!-- Latest compiled and minified CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Latest compiled JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function(){
   $("#btnPublish").click(function(){
-    // $("#div1").load("demo_test.txt", function(responseTxt, statusTxt, xhr){
-    //   if(statusTxt == "success")
-    //     alert("External content loaded successfully!");
-    //   if(statusTxt == "error")
-    //     alert("Error: " + xhr.status + ": " + xhr.statusText);
-    // });
 
-    // $.ajax({
-    //     url: "test.html",
-    //     context: document.body
-    // }).done(function() {
-    //     $( this ).addClass( "done" );
-    // });
-
-    // $.ajax({  
-    //     url: 'https://92q9jkt6rg.execute-api.us-east-1.amazonaws.com/dev/streams/MyStream/record',  
-    //     type: 'PUT',  
-    //     // dataType: 'json',  
-    //     // contentType: 'application/json',
-    //     headers: {
-    //         // "Access-Control-Allow-Origin" : "*", // Required for CORS support to work
-    //         "Content-Type": "application/json"
-    //     },
-    //     data: '{  "Data": "some data", "PartitionKey": "some key" }',  
-    //     success: function (data, textStatus, xhr) {  
-    //         console.log(data);  
-    //     },  
-    //     error: function (xhr, textStatus, errorThrown) {  
-    //         console.log('Error in Operation');  
-    //     }  
-    // });  
-
-    //Works
-    // console.log('test');
-
-    // var streamData = {
-    //     Data: document.getElementById('data').value,
-    //     PartitionKey : document.getElementById('partitionKey').value
-    // };
-
-    // console.log(JSON.stringify(streamData));
-
-
-    var input = '{  "Data": "' + document.getElementById('data').value + '", "PartitionKey": "' + document.getElementById('partitionKey').value +  '" }';
+    $("#publishOutput").text('');
+    let input = `{  "Data": "${$("#data").val()}", "PartitionKey": "${$("#partitionKey").val()}" }`;
     console.log(input);
 
+    let url = `https://xwqxaap1b3.execute-api.us-east-1.amazonaws.com/dev/streams/${$("#streamName").val()}/record`;
+    
     $.ajax({
     type: 'PUT',
-    url: 'https://92q9jkt6rg.execute-api.us-east-1.amazonaws.com/dev/streams/MyStream/record',
+    url: url,
     contentType: 'application/json',
-        // data: '{  "Data": "some data", "PartitionKey": "some key" }', // access in body
         data: input
     }).done(function (data) {
         console.log('SUCCESS');
         console.log(data);
+
+        let sequenceNumber = data.SequenceNumber;
+        let shardID = data.ShardId;
+        let output = `<b>Shard-ID</b>: ${shardID} <br/> <b>SequenceNumber</b>: ${sequenceNumber} <br/>`;    
+        
+        document.getElementById('publishOutput').innerHTML = output;
+
+        // $("#publishOutput").text(output);
     }).fail(function (msg) {
         console.log('FAIL');
-    }).always(function (msg) {
-        console.log('ALWAYS');
     });
 
   });
 
-  $("#btnGetRecords").click(function(){
-    // console.log('ShardIterator in parent: ' + getShardIterator());
+
+
+$("#btnGetRecords").click(function(){
    
     getKinesisRecordsFromDynamoDB();
 
@@ -97,7 +75,9 @@ async function getKinesisRecordsFromDynamoDB() {
 
 async function getDataFromDynamoDB() {
     let result;
-    let url = `https://92q9jkt6rg.execute-api.us-east-1.amazonaws.com/dev/dynamodb`
+    let tableName = 'KinesisStreamData2';
+
+    let url = `https://xwqxaap1b3.execute-api.us-east-1.amazonaws.com/dev/dynamodb?table-name=${$("#streamName").val()}`
 
     console.log(url);
 
@@ -114,14 +94,15 @@ async function getDataFromDynamoDB() {
     }
 }
 function buildTable(data){
-    document.getElementById('myTable').innerHTML = '';
+    $('#myTable').text('');
+    
     var table = document.getElementById('myTable');
 
     for (var i = 0; i < data.length; i++){
         var row = `<tr>
                         <td>${data[i].partitionKey.S}</td>
                         <td>${data[i].data.S}</td>
-                        <td>${data[i].creationTime.N}</td>
+                        <td>${new Date(data[i].creationTime.N *1000).toUTCString()}</td>
                     </tr>`
         table.innerHTML += row
 
@@ -129,84 +110,65 @@ function buildTable(data){
     }
 }
 
-async function getShardIterator() {
-    var shardIterator = '';
-
-    $.ajax({
-    type: 'GET',
-    url: 'https://92q9jkt6rg.execute-api.us-east-1.amazonaws.com/dev/streams/' + document.getElementById('streamName').value + '/sharditerator?shard-id=shardId-000000000000',
-    // url: 'https://92q9jkt6rg.execute-api.us-east-1.amazonaws.com/dev/streams/MyStream/sharditerator?shard-id=shardId-000000000000',
-    contentType: 'application/json',
-        // data: '{  "Data": "some data", "PartitionKey": "some key" }', // access in body
-
-    }).done(function (data) {
-        console.log('getShardIterator SUCCESS');
-        console.log(data);
-        shardIterator = data.ShardIterator
-        console.log('ShardIterator: ' + shardIterator);
-    }).fail(function (msg) {
-        console.log('getShardIterator FAIL');
-    }).always(function (msg) {
-        console.log('getShardIterator ALWAYS');
-    });
-
-    return shardIterator;
-}
 </script>
 </head>
 <body>
 
-<div id="div1"><h2>Serverless capstone</h2></div>
-<div>
-    <span>Stream:</span>
-    <input type="text" id="streamName" value="MyStream" />
-</div>
-<div>
-    <span>Data:</span>
-    <input type="text" id="data" value="some data" />
-</div>
-<div>
-    <span>Partition Key:</span>
-    <input type="text" id="partitionKey" value="some key" />
-</div>
-
-<p></p>
-<button id="btnPublish">Publish</button>
-
-<br/>
-
-<div>
-    <div>
-       <br/> <br />
-        <button id="btnGetRecords">Read from stream</button>
-        <div id="readData" />
-    </div>
-</div>
-
-
-<table class="table table-striped">
-    <tr  class="bg-info">
-        <th>Partition Key</th>
-        <th>Data</th>
-        <th>Creation Time</th>
-    </tr>
-
-    <tbody id="myTable">
+    <div class="container  border border-white">
+        <p class="h2">Serverless Capstone</p>
         
-    </tbody>
-</table>
+        <div class="row">
+            <div class="mb-3 mt-3">
+                <label for="streamName" class="form-label">Kinesis Stream:</label>
+                <input type="text" class="form-control" id="streamName" placeholder="Enter Stream Name" name="streamName" value="SoccerPlayersStream">
+            </div>
+        </div>
+
+        <div class="container p-2 my-2 border-top border-secondary">
+            <h3>Publish to Kinesis</h3>
+            
+            <div class="mb-3">
+                <label for="partitionKey" class="form-label">Partition Key:</label>
+                <input type="text" class="form-control" id="partitionKey" placeholder="Enter Partition Key" name="partitionKey" value="">
+            </div>
+
+            <div class="mb-3 mt-3">
+                <label for="data">Data:</label>
+                <textarea class="form-control" rows="4" id="data" name="text"></textarea>
+            </div>
+            <button type="button" id="btnPublish" class="btn btn-primary">Publish</button>
+            <div class="mb-3 mt-3" id="publishOutput">
+              
+
+            </div>
+        </div>
+
+        <div class="container p-2 my-2 mt-4  border-top border-bottom border-secondary">
+            <h3>Get Records from Kinesis</h3>
+           
+            
+            <button type="button" id="btnGetRecords" class="btn btn-primary">Read</button>
+
+            <!-- <div class="container mt-3"> -->
+                
+                <table class="table table-striped mt-3">
+                  <thead >
+                  <thead class="table-dark" >
+                    <tr>
+                      <th>Partition Key</th>
+                      <th>Data</th>
+                      <th>Creation Time</th>
+                    </tr>
+                  </thead>
+                  <tbody id="myTable">
+        
+                </tbody>
+                </table>
+              </div>
+            
+        <!-- </div> -->
+
+      </div>
+
 </body>
 </html>
-
-
-
-
-<!-- <html xmlns="http://www.w3.org/1999/xhtml" >
-<head>
-    <title>Serverless Capstone Home Page</title>
-</head>
-<body>
-  <h1>Welcome</h1>
-  <p>Now hosted on Amazon S3!</p>
-</body>
-</html> -->

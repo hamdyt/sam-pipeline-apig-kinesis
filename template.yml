@@ -6,14 +6,14 @@ Description: API Gateway to Kinesis Data Stream to AWS Lambda
 
 Globals:
   Function:
-    MemorySize: 2048
+    MemorySize: 512
     Timeout: 100
 
 Resources:
   # Define REST API for Kinesis data streams using OpenAPI3.0
-  KinesisProxy:
+  KinesisProxy2:
     Type: AWS::Serverless::Api
-    DependsOn: ApiKinesisExecutionRole
+    DependsOn: ApiKinesisExecutionRole2
     Properties:
       StageName: dev
       EndpointConfiguration:
@@ -27,15 +27,15 @@ Resources:
       
 
   # Define AWS Kinesis Data Stream
-  MyKinesisStream:
+  MyKinesisStream2:
     Type: AWS::Kinesis::Stream
     Properties:
       RetentionPeriodHours: 168
-      ShardCount: 2
-      Name: MyStream
+      ShardCount: 1
+      Name: KinesisStreamData2
   
   # Define API Gateway role to access Kinesis actions
-  ApiKinesisExecutionRole:
+  ApiKinesisExecutionRole2:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -52,7 +52,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonKinesisFullAccess
 
   # Define API Gateway role to access DynamoDB
-  ApiDynamoDBExecutionRole:
+  ApiDynamoDBExecutionRole2:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -75,27 +75,28 @@ Resources:
       Description: Handler for Lambda function that process Kinesis data streams
       CodeUri: src/
       Runtime: python3.8
-      Handler: lambda_function.lambda_handler
+      Handler: app.lambda_handler
       Tracing: Active
-      FunctionName: MyStreamFunction
+      FunctionName: MyStreamFunction2
       Policies:
       - AmazonDynamoDBFullAccess
       Events:
         Stream:
           Type: Kinesis
           Properties:
-            Stream: !GetAtt MyKinesisStream.Arn
+            Stream: !GetAtt MyKinesisStream2.Arn
             StartingPosition: TRIM_HORIZON
             BatchSize: 100
   
   S3Bucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
-      AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: error.html
-      BucketName: serverless-capstone
+      BucketName: sam-pipeline-kinesis
+      
     
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -107,7 +108,7 @@ Resources:
           - Sid: PublicReadForGetBucketObjects
             Effect: Allow
             Principal:
-              AWS: arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E2XJRBDBYKA248
+              AWS: arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity E36GDYVB54RFJ3
             Action: 's3:GetObject'
             Resource: !Join 
               - ''
@@ -119,7 +120,7 @@ Resources:
   DynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:
-      TableName: KinesisStreamData
+      TableName: KinesisStreamData2
       # A list of attributes that describe the key schema for the DynamoDB table.
       AttributeDefinitions:
         - AttributeName: pk
@@ -138,11 +139,11 @@ Outputs:
   # Kinesis Data Stream name for data producers to use
   KinesisStream:
     Description: Kinesis Data Stream name
-    Value: !Ref MyKinesisStream
+    Value: !Ref MyKinesisStream2
     
   APIEndpoint:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${KinesisProxy}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Value: !Sub "https://${KinesisProxy2}.execute-api.${AWS::Region}.amazonaws.com/dev"
     
   WebsiteURL:
     Value: !GetAtt 

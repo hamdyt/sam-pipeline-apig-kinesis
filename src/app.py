@@ -32,7 +32,7 @@ def lambda_handler(event, context):
 			
 			print('Decoded record: {}, Partition Key: {}, Creation time: {}, Primary Key: {}'.format(record, partitionKey, epochTime, pk))
 			
-			table = dynamodb.Table("KinesisStreamData")
+			table = dynamodb.Table("KinesisStreamData2")
 			# print(table.table_status)
 			
 			response = table.put_item(Item= {'pk': pk,'partitionKey':  partitionKey, 'data':  record, 'creationTime':  epochTime})
