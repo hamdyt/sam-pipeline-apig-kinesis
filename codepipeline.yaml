@@ -32,7 +32,7 @@ Parameters:
     Default: "GitHub"
   FullRepositoryId:
     Type: String
-    Default: "https://github.com/hamdyt/sam-pipeline-apig-kinesis"
+    Default: "hamdyt/sam-pipeline-apig-kinesis"
   MainGitBranch:
     Type: String
     Default: "main"
