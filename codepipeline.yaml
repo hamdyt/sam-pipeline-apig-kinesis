@@ -32,7 +32,7 @@ Parameters:
     Default: "GitHub"
   FullRepositoryId:
     Type: String
-    Default: "hamdyt/sam-pipeline-apig-kinesis"
+    Default: "https://github.com/hamdyt/sam-pipeline-apig-kinesis"
   MainGitBranch:
     Type: String
     Default: "main"
@@ -44,7 +44,7 @@ Parameters:
     Default: "us-east-1"
   TestingStackName:
     Type: String
-    Default: "sam-pipeline-dev"
+    Default: "sam-app"
   TestingPipelineExecutionRole:
     Type: String
     Default: "arn:aws:iam::779683736878:role/aws-sam-cli-managed-dev-pipe-PipelineExecutionRole-1N6ILOF43PDRL"
@@ -65,7 +65,7 @@ Parameters:
     Default: "us-east-1"
   ProdStackName:
     Type: String
-    Default: "sam-pipeline-prod"
+    Default: "sam-app"
   ProdPipelineExecutionRole:
     Type: String
     Default: "arn:aws:iam::779683736878:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1V25WIXSUS3W0"
