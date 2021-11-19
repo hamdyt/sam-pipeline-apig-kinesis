@@ -88,6 +88,7 @@ Resources:
             StartingPosition: TRIM_HORIZON
             BatchSize: 100
   
+  #might need to add DeletionPolicy=Retain later 
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
