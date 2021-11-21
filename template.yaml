@@ -106,6 +106,34 @@ Resources:
         AttributeName: TimeToLive
         Enabled: 'TRUE'
   
+  KinesisDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: sam-pipeline-kinesis.s3.us-east-1.amazonaws.com
+          Id: S3BucketOrigin
+          S3OriginConfig:
+            OriginAccessIdentity: origin-access-identity/cloudfront/E36GDYVB54RFJ3
+        Enabled: 'true'
+        Comment: Kinesis Cloudfront distribution with S3 Origin
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: S3BucketOrigin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+          
 Outputs:
   # Kinesis Data Stream name for data producers to use
   KinesisStream:
